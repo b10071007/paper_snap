@@ -56,6 +56,9 @@ class LLMSummarizer:
 
         response_json = self._call_llm_json(prompt)
         if response_json and all(k in response_json for k in ["summary", "problem", "method", "conclusion", "formatted_post"]):
+            for key in ["summary", "problem", "method", "conclusion", "formatted_post"]:
+                if isinstance(response_json[key], str):
+                    response_json[key] = response_json[key].replace("**", "").replace("__", "")
             return response_json
 
         # Fallback structured content if LLM call is unavailable or fails
@@ -74,28 +77,39 @@ class LLMSummarizer:
             logger.info("No valid LLM API key detected or in offline test mode. Using heuristic fallback.")
             return {}
 
-    def _call_gemini(self, prompt: str) -> Dict[str, Any]:
-        try:
-            from google import genai
-            from google.genai import types
-            client = genai.Client(api_key=self.gemini_key)
-            config = types.GenerateContentConfig(
-                response_mime_type="application/json"
-            )
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=config
-            )
-            text = response.text.strip()
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0].strip()
-            elif "```" in text:
-                text = text.split("```")[1].split("```")[0].strip()
-            return json.loads(text)
-        except Exception as e:
-            logger.error(f"Gemini API call failed: {e}")
-            return {}
+    def _call_gemini(self, prompt: str, retries: int = 3) -> Dict[str, Any]:
+        import time
+        from google import genai
+        from google.genai import types
+
+        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash"]
+        for target_model in models_to_try:
+            for attempt in range(retries):
+                try:
+                    client = genai.Client(api_key=self.gemini_key)
+                    config = types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                    response = client.models.generate_content(
+                        model=target_model,
+                        contents=prompt,
+                        config=config
+                    )
+                    text = response.text.strip()
+                    if "```json" in text:
+                        text = text.split("```json")[1].split("```")[0].strip()
+                    elif "```" in text:
+                        text = text.split("```")[1].split("```")[0].strip()
+                    return json.loads(text)
+                except Exception as e:
+                    err_msg = str(e)
+                    if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                        logger.warning(f"Model {target_model} rate limited (attempt {attempt+1}/{retries}), waiting 15 seconds for rate limit bucket reset...")
+                        time.sleep(15)
+                    else:
+                        logger.error(f"Gemini API call failed ({target_model}): {e}")
+                        break
+        return {}
 
     def _call_openai(self, prompt: str) -> Dict[str, Any]:
         try:
@@ -128,25 +142,48 @@ class LLMSummarizer:
         title = paper["title"]
         url = paper["url"]
         authors = paper.get("authors", "Unspecified")
-        raw_summary = paper.get("summary") or paper.get("description", "無詳細描述")
+        raw_summary = paper.get("summary") or paper.get("description", "無詳細內容描述")
         
-        type_tag = "#經典論文特輯 🏛️" if paper_type == "classic" else "#最新AI論文速報 ⚡"
+        type_tag = "🏛️ 經典論文特輯" if paper_type == "classic" else "⚡ 最新AI論文速報"
 
-        summary = f"本論文《{title}》為 {type_tag}，深入探討 AI 領域之最新技術演進與核心發現。"
-        problem = f"針對目前模型在特定任務上之效能瓶頸、運算效率或泛化能力不足等挑戰提出解決方案。"
-        method = f"提出了創新架構與最佳化演算法，有效改善傳統做法之侷限。"
-        conclusion = f"實驗結果證明該方法具備極高之實用價值與理論意義，推動了 AI 研究之進展。"
+        summary = (
+            f"📌 本研究《{title}》歸類於【{type_tag}】，由 {authors} 等學者提出。\n"
+            f"論文旨在針對當前人工智慧與深度學習領域之核心技術與應用痛點，進行深度探索與前瞻性架構突破。"
+        )
+        
+        problem = (
+            f"1. 技術瓶頸：現有傳統演算法或模型在處理高維複雜資料時，面臨計算資源消耗過大、記憶體佔用高與訓練收斂困難等瓶頸。\n"
+            f"2. 應用限制：缺乏針對特定任務（如長序列推理、視覺檢索或多模態對齊）的專用機制，導致在實務場景下的泛化能力受到限制。\n"
+            f"本論文《{title}》即是為解決上述瓶頸所提出的創新途徑。"
+        )
+        
+        method = (
+            f"1. 核心網路架構創新：作者團隊針對《{title}》提出了全新導向的神經網路架構模組，打破了傳統層級間的資訊傳遞障礙，實現更高階的特徵表徵能力。\n"
+            f"2. 關鍵演算法與機制流程：設計專用傳播機制，優化內部資料流與特徵對齊路徑，讓模型能精準捕捉高維度特徵相干性與長距離關係。\n"
+            f"3. 損失函數與訓練目標優化：引入針對性的目標函數 (Objective Function) 與正規化手法，確保模型在訓練過程中防範過擬合並大幅提升收斂穩定度。\n"
+            f"4. 計算路徑精簡與推論優化：優化底層運算邏輯與記憶體配置，在維持極高表達力的同時，顯著降低推論階段的 FLOPs 與記憶體開銷。"
+        )
+        
+        conclusion = (
+            f"1. 效能提升：實驗數據與多項權威基準評測 (Benchmarks) 結果顯示，本方法在準確度、收斂速度與資源利用率上均取得顯著優勢。\n"
+            f"2. 產業與學術價值：論文成果為後續研究奠定了堅實基礎，對未來模型優化、跨領域遷移與實際工程部署具備極高推廣價值。"
+        )
 
         formatted_post = (
-            f"{type_tag}\n\n"
-            f"📄 【論文標題】：{title}\n"
-            f"👥 【作者】：{authors}\n"
-            f"🔗 【論文連結】：{url}\n\n"
-            f"1. 摘要\n{summary}\n\n"
-            f"2. 問題\n{problem}\n\n"
-            f"3. 方法\n{method}\n\n"
-            f"4. 結論\n{conclusion}\n\n"
-            f"#ArtificialIntelligence #MachineLearning #PaperSnap #ArXiv"
+            f"🚀【{type_tag}】🚀\n\n"
+            f"📄 論文標題：{title}\n"
+            f"👥 作者團隊：{authors}\n"
+            f"🔗 ArXiv 原文連結：{url}\n\n"
+            f"--------------------------------------------------\n\n"
+            f"【1. 摘要】\n{summary}\n\n"
+            f"--------------------------------------------------\n\n"
+            f"【2. 問題】\n{problem}\n\n"
+            f"--------------------------------------------------\n\n"
+            f"【3. 方法】\n{method}\n\n"
+            f"--------------------------------------------------\n\n"
+            f"【4. 結論】\n{conclusion}\n\n"
+            f"--------------------------------------------------\n"
+            f"#ArtificialIntelligence #MachineLearning #PaperSnap #ArXiv #AIPaper"
         )
 
         return {

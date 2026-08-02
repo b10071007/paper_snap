@@ -93,29 +93,60 @@ cp .env.example .env
 
 ---
 
-## 💻 執行指令說明
+## 💻 完整執行指令對照表 (Command Reference)
 
-### 1. 執行單元測試驗證環境
+### 1. 虛擬環境建立與套件安裝 (Environment Setup)
 ```bash
-python -m unittest discover tests
+# 建立 Python 虛擬環境
+python -m venv .venv
+
+# 啟用虛擬環境 (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# 啟用虛擬環境 (Windows CMD)
+.\.venv\Scripts\activate.bat
+
+# 啟用虛擬環境 (Linux/macOS)
+source .venv/bin/activate
+
+# 安裝與更新專案依賴套件
+pip install -r requirements.txt
 ```
 
-### 2. 手動觸發發布 (Dry-Run 預覽)
+### 2. Web 論文搜尋與閱讀介面 (Web Reader Portal)
 ```bash
-# 執行所有每日任務 (1篇經典 + 2篇最新論文):
+# 啟動 Web Portal 介面 (預設通訊埠 8080)
+python -m uvicorn src.web.server:app --host 127.0.0.1 --port 8080
+
+# 開發模式啟動 (程式碼變更自動重載)
+python -m uvicorn src.web.server:app --host 127.0.0.1 --port 8080 --reload
+
+# 開啟瀏覽器存取位址：
+# http://localhost:8080
+```
+
+### 3. 主程式發布與工作流程 (Main Workflow & Scheduler)
+```bash
+# 執行全部每日任務 (1篇經典 + 2篇最新論文) - Dry-Run 模擬發布模式:
 python main.py --dry-run
 
-# 僅執行經典論文任務:
-python main.py --dry-run --job classic
+# 執行全部每日任務 - 正式發布模式 (實際發布至 Facebook 專頁):
+python main.py
 
-# 僅執行最新論文任務:
-python main.py --dry-run --job latest
+# 僅執行經典論文任務 (Dry-Run 模式):
+python main.py --job classic --dry-run
+
+# 僅執行最新論文任務 (Dry-Run 模式):
+python main.py --job latest --dry-run
+
+# 啟動每日自動排程守護進程 (Daemon 模式，每日 09:00 AM 自動執行):
+python main.py --schedule
 ```
 
-### 3. 啟動每日自動排程 (Daemon 模式)
+### 4. 單元測試 (Unit Tests)
 ```bash
-# 每日上午 09:00 自動執行:
-python main.py --schedule
+# 執行專案單元測試驗證
+python -m unittest discover tests
 ```
 
 ---
@@ -124,3 +155,4 @@ python main.py --schedule
 
 1. **擴充經典論文庫**：可增修 `data/seed_classic_papers.json` 內容至 100 篇完整清單。
 2. **多平台同步**：可於 `src/publishers/` 擴充 Threads / Twitter (X) / Telegram 機器人發布模組。
+

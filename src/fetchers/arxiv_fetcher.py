@@ -211,5 +211,33 @@ class ArxivFetcher:
             logger.error(f"Error fetching from ArXiv HTTP XML API: {ex}")
             return []
 
+    def fetch_paper_by_id(self, arxiv_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch full details and abstract for a specific ArXiv ID.
+        """
+        try:
+            import arxiv
+            search = arxiv.Search(id_list=[arxiv_id])
+            client = arxiv.Client()
+            results = list(client.results(search))
+            if results:
+                result = results[0]
+                authors = ", ".join([a.name for a in result.authors[:5]])
+                if len(result.authors) > 5:
+                    authors += " et al."
+                return {
+                    "arxiv_id": arxiv_id,
+                    "title": result.title.replace("\n", " ").strip(),
+                    "authors": authors,
+                    "published": result.published.strftime("%Y-%m-%d") if result.published else "",
+                    "summary": result.summary.replace("\n", " ").strip(),
+                    "url": f"https://arxiv.org/abs/{arxiv_id}",
+                    "categories": result.categories
+                }
+        except Exception as e:
+            logger.warning(f"Failed to fetch paper by ID {arxiv_id} via arxiv SDK ({e}).")
+        return None
+
+
 
 

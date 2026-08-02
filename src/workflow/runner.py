@@ -30,6 +30,13 @@ class WorkflowRunner:
         arxiv_id = classic["arxiv_id"]
         logger.info(f"Processing Classic Paper: {classic['title']} (ArXiv ID: {arxiv_id})")
 
+        # Fetch full ArXiv abstract for rich analysis
+        fetched = self.fetcher.fetch_paper_by_id(arxiv_id)
+        if fetched and fetched.get("summary"):
+            classic["summary"] = fetched["summary"]
+            if fetched.get("authors"):
+                classic["authors"] = fetched["authors"]
+
         # Summarize paper
         summary_res = self.summarizer.summarize_paper(classic, paper_type="classic")
 
@@ -110,7 +117,10 @@ class WorkflowRunner:
         return published_count
 
     def run_all_daily(self):
+        import time
         logger.info("=== Starting Daily Paper Snap Workflow ===")
         self.run_classic_paper_job()
+        logger.info("Waiting 10 seconds before starting latest papers job...")
+        time.sleep(10)
         self.run_latest_papers_job()
         logger.info("=== Daily Paper Snap Workflow Completed ===")
