@@ -147,8 +147,10 @@ class LLMSummarizer:
         type_tag = "🏛️ 經典論文特輯" if paper_type == "classic" else "⚡ 最新AI論文速報"
 
         summary = (
-            f"📌 本研究《{title}》歸類於【{type_tag}】，由 {authors} 等學者提出。\n"
-            f"論文旨在針對當前人工智慧與深度學習領域之核心技術與應用痛點，進行深度探索與前瞻性架構突破。"
+            f"1. 論文研究領域與定位：本篇重要研究《{title}》歸類於【{type_tag}】，由 {authors} 等學者團隊共同提出。\n"
+            f"2. 整體研究內容摘要整理：針對當前 AI 領域技術脈絡，論文的核心探討重點如下：\n"
+            f"{raw_summary}\n"
+            f"3. 全貌價值與亮點總結：本研究從理論模型到工程實現進行了全面探索，為該領域之演算法演進與實際應用帶來了顯著影響與貢獻。"
         )
         
         problem = (
