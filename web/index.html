@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper Snap 論文閱讀與搜尋系統 | ArXiv AI Summaries</title>
+  <meta name="description" content="Paper Snap 論文知識庫 - 提供 AI 自動生成之經典與最新 ArXiv 論文速報、結構化分析與 FB 發布排版系統。">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Style -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <div class="brand-text">
+          <h1>Paper Snap</h1>
+          <span class="subtitle">AI 論文知識庫 & 自動化導讀系統</span>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-item">
+          <span class="stat-value" id="statTotal">-</span>
+          <span class="stat-label">收錄論文</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value highlight-classic" id="statClassic">-</span>
+          <span class="stat-label">經典論文</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value highlight-latest" id="statLatest">-</span>
+          <span class="stat-label">最新速報</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value highlight-published" id="statPublished">-</span>
+          <span class="stat-label">已發布</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="content-area">
+      <!-- Search Controls Bar -->
+      <section class="controls-card">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="搜尋論文標題、作者、ArXiv ID、摘要內容..." autocomplete="off">
+          <button type="button" id="clearSearchBtn" class="clear-btn" style="display: none;">✕</button>
+        </div>
+
+        <div class="filter-group">
+          <!-- Type Filter Tabs -->
+          <div class="filter-tabs" id="typeTabs">
+            <button class="tab-btn active" data-type="all">全部論文</button>
+            <button class="tab-btn" data-type="classic">🏛️ 經典論文</button>
+            <button class="tab-btn" data-type="latest">⚡ 最新速報</button>
+          </div>
+
+          <!-- Status Select Filter -->
+          <div class="status-filter">
+            <label for="statusSelect">發布狀態：</label>
+            <select id="statusSelect">
+              <option value="all">全部狀態</option>
+              <option value="true">✅ 已發布</option>
+              <option value="false">📝 未發布 / 草稿</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Header & Counter -->
+      <div class="results-meta">
+        <div class="count-display">找到 <span id="resultsCount">0</span> 篇論文記錄</div>
+        <div class="sort-tag">依最新建立時間排序 ⏱️</div>
+      </div>
+
+      <!-- Paper Grid List -->
+      <div class="paper-grid" id="paperGrid">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>正在載入資料庫論文...</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <p>Paper Snap Database Reader & Portal &copy; 2026. Built with Python, FastAPI & Modern Web Design.</p>
+    </footer>
+  </div>
+
+  <!-- Detail Reader Modal -->
+  <div class="modal-backdrop" id="readerModal">
+    <div class="modal-container">
+      <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+      
+      <div class="modal-header">
+        <div class="modal-badges">
+          <span class="type-badge" id="modalTypeBadge">🏛️ 經典論文</span>
+          <span class="published-badge" id="modalPublishedBadge">✅ 已發布</span>
+          <span class="arxiv-badge" id="modalArxivId">ArXiv: 2006.11239</span>
+        </div>
+        <h2 class="modal-title" id="modalTitle">Loading Paper Title...</h2>
+        <div class="modal-meta">
+          <span class="meta-item">👥 <strong id="modalAuthors">Authors</strong></span>
+          <span class="meta-item">📅 發布於 <span id="modalDate">-</span></span>
+          <a href="#" target="_blank" rel="noopener" class="arxiv-link-btn" id="modalArxivLink">📄 查看 ArXiv 原文 ↗</a>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Structured 4-Section Reader -->
+        <div class="structured-sections">
+          <div class="section-card section-summary">
+            <h3><span class="sec-icon">📌</span> 1. 摘要 (Summary)</h3>
+            <p id="modalSummary">-</p>
+          </div>
+
+          <div class="section-card section-problem">
+            <h3><span class="sec-icon">❓</span> 2. 研究問題 (Problem)</h3>
+            <p id="modalProblem">-</p>
+          </div>
+
+          <div class="section-card section-method">
+            <h3><span class="sec-icon">💡</span> 3. 創新方法 (Method)</h3>
+            <p id="modalMethod">-</p>
+          </div>
+
+          <div class="section-card section-conclusion">
+            <h3><span class="sec-icon">🎯</span> 4. 實驗結論 (Conclusion)</h3>
+            <p id="modalConclusion">-</p>
+          </div>
+        </div>
+
+        <!-- Social Post Preview & Copy Section -->
+        <div class="post-preview-box">
+          <div class="post-preview-header">
+            <h4>📱 模擬 Facebook 社群貼文排版</h4>
+            <button class="copy-post-btn" id="copyPostBtn">
+              <span class="btn-icon">📋</span> 複製貼文全文
+            </button>
+          </div>
+          <pre class="post-content" id="modalFormattedPost">-</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">已成功複製貼文！</div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

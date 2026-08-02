@@ -158,3 +158,94 @@ class DBManager:
             UPDATE papers SET is_published = 1, published_at = ? WHERE arxiv_id = ?
             """, (now, arxiv_id))
             conn.commit()
+
+    def search_papers(
+        self,
+        query: str = "",
+        paper_type: str = "all",
+        is_published: Optional[str] = "all",
+        limit: int = 50,
+        offset: int = 0
+    ) -> Dict[str, Any]:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            conditions = []
+            params = []
+
+            if query:
+                q_param = f"%{query.strip()}%"
+                conditions.append("(arxiv_id LIKE ? OR title LIKE ? OR authors LIKE ? OR summary LIKE ? OR problem LIKE ? OR method LIKE ? OR conclusion LIKE ?)")
+                params.extend([q_param] * 7)
+
+            if paper_type in ("classic", "latest"):
+                conditions.append("paper_type = ?")
+                params.append(paper_type)
+
+            if is_published in ("true", "1"):
+                conditions.append("is_published = 1")
+            elif is_published in ("false", "0"):
+                conditions.append("is_published = 0")
+
+            where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+            # Count total matching rows
+            count_sql = f"SELECT COUNT(*) FROM papers {where_clause}"
+            cursor.execute(count_sql, params)
+            total = cursor.fetchone()[0]
+
+            # Fetch rows
+            select_sql = f"""
+            SELECT * FROM papers
+            {where_clause}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """
+            cursor.execute(select_sql, params + [limit, offset])
+            rows = [dict(row) for row in cursor.fetchall()]
+
+            return {
+                "total": total,
+                "items": rows,
+                "limit": limit,
+                "offset": offset
+            }
+
+    def get_paper_by_arxiv_id(self, arxiv_id: str) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM papers WHERE arxiv_id = ?", (arxiv_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+            return None
+
+    def get_paper_stats(self) -> Dict[str, Any]:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM papers")
+            total_papers = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM papers WHERE paper_type = 'classic'")
+            classic_processed = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM papers WHERE paper_type = 'latest'")
+            latest_processed = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM papers WHERE is_published = 1")
+            published_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM classic_queue")
+            total_classic_queue = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM classic_queue WHERE is_processed = 1")
+            classic_queue_processed = cursor.fetchone()[0]
+
+            return {
+                "total_papers": total_papers,
+                "classic_processed": classic_processed,
+                "latest_processed": latest_processed,
+                "published_count": published_count,
+                "classic_queue_total": total_classic_queue,
+                "classic_queue_processed": classic_queue_processed
+            }
+
