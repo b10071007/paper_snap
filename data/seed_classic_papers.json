@@ -1,0 +1,82 @@
+[
+  {
+    "arxiv_id": "1706.03762",
+    "title": "Attention Is All You Need",
+    "authors": "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin",
+    "url": "https://arxiv.org/abs/1706.03762",
+    "published_year": 2017,
+    "description": "提出了 Transformer 架構，以 Self-Attention 機制取代傳統 RNN/CNN，成為當今 LLM 的基石。"
+  },
+  {
+    "arxiv_id": "1512.03385",
+    "title": "Deep Residual Learning for Image Recognition (ResNet)",
+    "authors": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun",
+    "url": "https://arxiv.org/abs/1512.03385",
+    "published_year": 2015,
+    "description": "提出殘差連接 (Residual Connection)，解決極深神經網路梯度消失問題，開創深度學習新時代。"
+  },
+  {
+    "arxiv_id": "1810.04805",
+    "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+    "authors": "Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova",
+    "url": "https://arxiv.org/abs/1810.04805",
+    "published_year": 2018,
+    "description": "雙向 Transformer 預訓練模型，開啟了 NLP 領域預訓練與微調 (Pre-train & Fine-tune) 的主流範式。"
+  },
+  {
+    "arxiv_id": "1406.2661",
+    "title": "Generative Adversarial Nets (GAN)",
+    "authors": "Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio",
+    "url": "https://arxiv.org/abs/1406.2661",
+    "published_year": 2014,
+    "description": "提出對抗生成網路，由生成器與判別器相互博弈，徹底改寫深度生成模型發展歷史。"
+  },
+  {
+    "arxiv_id": "2005.14165",
+    "title": "Language Models are Few-Shot Learners (GPT-3)",
+    "authors": "Tom B. Brown et al.",
+    "url": "https://arxiv.org/abs/2005.14165",
+    "published_year": 2020,
+    "description": "展示超大規模語言模型具備優異的 Few-Shot 與 Zero-Shot 湧現能力，宣告大語言模型時代來臨。"
+  },
+  {
+    "arxiv_id": "1312.6114",
+    "title": "Auto-Encoding Variational Bayes (VAE)",
+    "authors": "Diederik P. Kingma, Max Welling",
+    "url": "https://arxiv.org/abs/1312.6114",
+    "published_year": 2013,
+    "description": "結合變分推論與神經網路，奠定概率生成模型與潛在變數學習基礎。"
+  },
+  {
+    "arxiv_id": "2006.11239",
+    "title": "Denoising Diffusion Probabilistic Models (DDPM)",
+    "authors": "Jonathan Ho, Ajay Jain, Pieter Abbeel",
+    "url": "https://arxiv.org/abs/2006.11239",
+    "published_year": 2020,
+    "description": "將擴散過程引入生成模型，成為 Stable Diffusion 與 Midjourney 等當代圖像生成技術之骨幹。"
+  },
+  {
+    "arxiv_id": "1412.6980",
+    "title": "Adam: A Method for Stochastic Optimization",
+    "authors": "Diederik P. Kingma, Jimmy Ba",
+    "url": "https://arxiv.org/abs/1412.6980",
+    "published_year": 2014,
+    "description": "結合動量與自適應學習率的最佳化演算法，至今仍是深度學習訓練最廣泛使用的 Optimizer 之一。"
+  },
+  {
+    "arxiv_id": "1409.1556",
+    "title": "Very Deep Convolutional Networks for Large-Scale Image Recognition (VGG)",
+    "authors": "Karen Simonyan, Andrew Zisserman",
+    "url": "https://arxiv.org/abs/1409.1556",
+    "published_year": 2014,
+    "description": "探索神經網路深度對視覺識別的影響，展示小尺寸 3x3 卷積核堆疊的強大威力。"
+  },
+  {
+    "arxiv_id": "1506.03184",
+    "title": "End-to-End Memory Networks",
+    "authors": "Sainbayar Sukhbaatar, Arthur Szlam, Jason Weston, Rob Fergus",
+    "url": "https://arxiv.org/abs/1506.03184",
+    "published_year": 2015,
+    "description": "引進外部記憶體結構，為神經網路長程記憶與問答推理奠定基礎。"
+  }
+]
